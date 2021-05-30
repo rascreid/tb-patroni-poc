@@ -1,0 +1,118 @@
+---
+- hosts: db
+  become: yes
+  tasks:
+    - name: Install/Update pip
+      apt:
+        name: ['python3-pip', 'python3-dev', 'libpq-dev']
+        update_cache: yes
+        state: present
+
+    - name: Install Patroni
+      pip:
+        name: ['psycopg2-binary', 'patroni[zookeeper]']
+        state: present
+    
+    - name: Copy Patroni Unit File
+      copy:
+        src: patroni.service
+        dest: /etc/systemd/system/patroni.service
+
+    - name: Directory for patroni config
+      file:
+        path: /etc/patroni
+        state: directory
+
+    - name: Template Patroni Configuration
+      template:
+        src: patroni.yml.j2
+        dest: /etc/patroni/patroni.yml
+
+##############################################################################
+- hosts: zk
+  become: yes
+  tasks:
+    - name: Install Java
+      apt:
+        name: [ 'openjdk-{{ jdk_ver }}-jdk', 'apt-transport-https']
+        update_cache: yes
+        state: present
+
+##############################################################################      
+- hosts: zk
+  become: yes
+  tasks:
+    - name: create zk group
+      group:
+        name: zk
+        state: present
+    - name: Create ZK user
+      user:
+        name: zk
+        shell: /bin/bash
+        state: present
+        append: yes
+        groups: ['sudo','zk']
+
+    - name: Create data directory
+      file:
+        path: /data/zookeeper
+        state: directory
+        owner: zk
+        group: zk
+    - name: Create id file
+      copy:
+        dest: /data/zookeeper/myid
+        content: '{{ my_id }}'
+        owner: zk
+        group: zk
+
+    - name: Get/Unpack Zookeper
+      unarchive:
+        remote_src: yes
+        src: https://apache.paket.ua/zookeeper/zookeeper-3.6.3/apache-zookeeper-3.6.3-bin.tar.gz
+        dest: /opt/
+        owner: zk
+        group: zk
+    - name: Create symlink
+      file:
+        src: /opt/apache-zookeeper-3.6.3-bin
+        path: /opt/zookeeper
+        state: link
+        owner: zk
+        group: zk
+
+    - name: Copy zookeper Unit file
+      copy:
+        src: zookeeper.service
+        dest: /etc/systemd/system/zookeeper.service
+    - name: Copy zookeper conig file
+      copy:
+        src: zoo.cfg
+        dest: /opt/zookeeper/conf/zoo.cfg
+        owner: zk
+        group: zk
+
+    - name: Start zookeeper
+      systemd:
+        name: zookeeper
+        enabled: yes
+        state: started
+##############################################################################
+- hosts: tb
+  become: yes
+  tasks:
+    - name: Install Java
+      apt:
+        name: [ 'openjdk-{{ jdk_ver }}-jdk', 'apt-transport-https']
+        update_cache: yes
+        state: present
+
+    - name: Install ThingsBoard
+      apt:
+        deb: '{{ tb_url }}'
+
+    - name: Template ThingsBoard Configuration
+      template:
+        src: thingsboard.conf.j2
+        dest: /etc/thingsboard/conf/thingsboard.conf
