@@ -26,22 +26,18 @@ Vagrant.configure("2") do |config|
       "tb" => {"ansible_ssh_extra_args" => '-o StrictHostKeyChecking=no', "my_ip" => "10.0.1.30", "my_id" => "3", "jdk_ver" => "11",
       "pg1_ip" => "10.0.1.10", "pg2_ip" => "10.0.1.20",
       "tb_url" => "https://github.com/thingsboard/thingsboard/releases/download/v3.2.2/thingsboard-3.2.2.deb",}
-
-    }
-  end
-
-
- $SCRIPT =<<-SCRIPT
-  #!/bin/bash
-  ScriptBlock
- SCRIPT
+      }
+  end # provision "ansible"
 
  $DisablePG = <<-SCRIPT
   #!/bin/bash
   sudo bash -c "systemctl stop postgresql ; systemctl disable postgresql"
  SCRIPT
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> dev
     config.vm.define "pg1" do |pg1|
       pg1.vm.network "private_network", ip: "10.0.1.10"
       pg1.vm.hostname = "pg1"
@@ -49,8 +45,8 @@ Vagrant.configure("2") do |config|
       pg1.vm.provision "shell", path: "https://gist.githubusercontent.com/rascreid/6d9345b3a6ec86d59cbab346b422401a/raw/f59d20922fd47b7ed5e9df66bab4dbda381b3ed7/install-x-PostgreSQL.sh" do |s|
         s.args = "12" #Version-12
       end
-      pg1.vm.provision "shell", inline: $DisablePG
 
+      pg1.vm.provision "shell", inline: $DisablePG
     end
 
   config.vm.define "pg2" do |pg2|
@@ -60,15 +56,18 @@ Vagrant.configure("2") do |config|
     pg2.vm.provision "shell", path: "https://gist.githubusercontent.com/rascreid/6d9345b3a6ec86d59cbab346b422401a/raw/f59d20922fd47b7ed5e9df66bab4dbda381b3ed7/install-x-PostgreSQL.sh" do |s|
       s.args = "12" #Version-12
     end
-    pg2.vm.provision "shell", inline: $DisablePG
 
+    pg2.vm.provision "shell", inline: $DisablePG
   end
 
   config.vm.define "tb" do |tb|
     tb.vm.network "private_network", ip: "10.0.1.30"
     tb.vm.hostname = "tb"
+<<<<<<< HEAD
 
 
+=======
+>>>>>>> dev
   end
 
 end

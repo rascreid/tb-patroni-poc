@@ -18,7 +18,7 @@
         src: patroni.service
         dest: /etc/systemd/system/patroni.service
 
-    - name: Directory for patroni config
+    - name: Create directory for Patroni config
       file:
         path: /etc/patroni
         state: directory
@@ -42,10 +42,11 @@
 - hosts: zk
   become: yes
   tasks:
-    - name: create zk group
+    - name: Create ZK group
       group:
         name: zk
         state: present
+
     - name: Create ZK user
       user:
         name: zk
@@ -82,11 +83,11 @@
         owner: zk
         group: zk
 
-    - name: Copy zookeper Unit file
+    - name: Copy zookeper unit file
       copy:
         src: zookeeper.service
         dest: /etc/systemd/system/zookeeper.service
-    - name: Copy zookeper conig file
+    - name: Copy zookeper config file
       copy:
         src: zoo.cfg
         dest: /opt/zookeeper/conf/zoo.cfg
@@ -112,7 +113,7 @@
       apt:
         deb: '{{ tb_url }}'
 
-    - name: Template ThingsBoard Configuration
+    - name: Template ThingsBoard configuration file
       template:
         src: thingsboard.conf.j2
         dest: /etc/thingsboard/conf/thingsboard.conf

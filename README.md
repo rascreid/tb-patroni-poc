@@ -143,12 +143,9 @@ Customer User: customer@thingsboard.org / customer
 
 ### Executing commands
 
-Login as postgres user and use patronictl 
-
 ```
 patronictl -c /etc/patroni/patroni.yml command
 ```
-
 
 ### Listing
 
