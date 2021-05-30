@@ -2,7 +2,7 @@
 
 You should be able to use this repo to quicly deploy and test PostgreSQL HA on Patroni with Thingsboard.
 
-VMs that will be deployed:
+VMs that will be deployed in private 10.0.1.0 network:
 - 2 VMs with PostgreSQL (pg1/pg2)
 - 1 VM with ThingBoard+Zookeper (tb)
 
@@ -11,14 +11,12 @@ Feel free to edit Vagrant file for any customizations.
 ## Prerequisites
 ---
 You would need a [Vagrant](https://www.vagrantup.com/docs/installation) installed to follow along.
+Also [ansible](https://docs.ansible.com/ansible/latest/installation_guide/intro_installation.html) is needed as it is used to [provision](https://www.vagrantup.com/docs/provisioning/ansible_intro) VMs
 
 >This deployment has been tested on Ubuntu+VirtualBox
 
 ## Getting Started
 ---
-Before starting Vagrant adjust network settings on the machines and change it to your NIC.
-
-*x.vm.network "public_network", bridge: "enp8s0"*
 
 When all done, to start run:
 
@@ -40,13 +38,11 @@ vagrant ssh vmname
 ```
 vagrant ssh pg1
 ```
-- Edit patroni configuration file
+- Check whether configuration templated successfully
 
 ```
-sudo vi /etc/patroni/patroni.yml
+less /etc/patroni/patroni.yml
 ```
->Change name to pg1 and replace x.x.x.x with corresponding IP addresses. For complete information on configuration options refer to the [Patroni documentation](https://patroni.readthedocs.io/en/latest/dynamic_configuration.html)
-
 - Start patroni service and add it to autostart
 
 
@@ -76,12 +72,11 @@ psql -U postgres -h localhost -c "CREATE DATABASE thingsboard;"
 ```
 vagrant ssh pg2
 ```
-- Edit patroni configuration file
+- Check whether configuration templated successfully
 
 ```
-sudo vi /etc/patroni/patroni.yml
+less /etc/patroni/patroni.yml
 ```
->Change name to pg2 and replace x.x.x.x with corresponding IP addresses. 
 
 - Start patroni service and add it to autostart
 
@@ -98,6 +93,12 @@ systemctl status patroni.service
 ```
 sudo journalctl -u patroni
 ```
+- login to PostgreSQL and ensure previously created DB replicating
+
+```
+psql -U postgres -h localhost
+\l
+```
 
 ## TB
 
@@ -105,10 +106,10 @@ sudo journalctl -u patroni
 vagrant ssh tb
 ```
 
-Edit **SPRING_DATASOURCE_URL** environment in thingsboard.conf and repace **x.x.x.x** to ip addresses for pg1 and pg2
+- Check whether configuration templated successfully
 
 ```
-sudo vi /etc/thingsboard/conf/thingsboard.conf 
+less /etc/thingsboard/conf/thingsboard.conf
 ```
 
 > **Target_session_attrs=read-write**
@@ -125,7 +126,8 @@ sudo /usr/share/thingsboard/bin/install/install.sh --loadDemo && sudo service th
 Once started, you will be able to open Web UI using the following link:
 
 ```
-http://x.x.x.x:8080
+http://10.0.1.30:8080
+
 ```
 
 The following default credentials are available if you have specified –loadDemo during execution of the installation script:
@@ -141,23 +143,17 @@ Customer User: customer@thingsboard.org / customer
 
 ### Executing commands
 
-Login as postgres user and use  patronictl 
+Login as postgres user and use patronictl 
 
 ```
-sudo su - postgres
-
 patronictl -c /etc/patroni/patroni.yml command
 ```
 
-or
-```
-sudo -iu postgres patronictl -c /etc/patroni/patroni.yml command
-```
 
 ### Listing
 
 ```
-sudo -iu postgres patronictl -c /etc/patroni/patroni.yml list
+patronictl -c /etc/patroni/patroni.yml list
 
 ```
 ```
@@ -174,7 +170,7 @@ sudo -iu postgres patronictl -c /etc/patroni/patroni.yml list
 Is a manual operation, will switch a master role to a new node. Requires the presence of a master.
 
 ```
-sudo -iu postgres patronictl -c /etc/patroni/patroni.yml switchover
+patronictl -c /etc/patroni/patroni.yml switchover
 ```
 ```
 Master [pg1]: 
@@ -200,7 +196,7 @@ Are you sure you want to switchover cluster thingsboard, demoting current master
 Run list again to get information on current status
 
 ```
-sudo -iu postgres patronictl -c /etc/patroni/patroni.yml list
+patronictl -c /etc/patroni/patroni.yml list
 ```
 
 ### Failover
@@ -219,7 +215,7 @@ sudo systemctl poweroff
 vagrant ssh pg1
 ```
 ```
-vagrant@pg1:~$ date && sudo -iu postgres patronictl -c /etc/patroni/patroni.yml list
+vagrant@pg1:~$ date && patronictl -c /etc/patroni/patroni.yml list
 Thu May 20 18:22:16 UTC 2021
 
 + Cluster: thingsboard (6964427273370993718) +----+-----------+
@@ -228,7 +224,7 @@ Thu May 20 18:22:16 UTC 2021
 | pg1    | 192.168.1.133 | Replica | running |  2 |         0 |
 | pg2    | 192.168.1.108 | Leader  | running |  2 |           |
 +--------+---------------+---------+---------+----+-----------+
-vagrant@pg1:~$ date && sudo -iu postgres patronictl -c /etc/patroni/patroni.yml list
+vagrant@pg1:~$ date && patronictl -c /etc/patroni/patroni.yml list
 
 Thu May 20 18:22:48 UTC 2021
 
@@ -245,13 +241,13 @@ Thu May 20 18:22:48 UTC 2021
 A cluster-wide configuration or the separate node configuration
 
 ```
-sudo -iu postgres patronictl -c /etc/patroni/patroni.yml edit-config
+patronictl -c /etc/patroni/patroni.yml edit-config
 ```
 
 ### Get Help
 
 ```
-sudo -iu postgres patronictl -c /etc/patroni/patroni.yml --help
+patronictl -c /etc/patroni/patroni.yml --help
 ```
 
 > For the complete list of operation refer to the Patroni [REST API documentation](https://patroni.readthedocs.io/en/latest/rest_api.html?highlight=patronictl)
