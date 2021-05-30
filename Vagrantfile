@@ -34,10 +34,6 @@ Vagrant.configure("2") do |config|
   sudo bash -c "systemctl stop postgresql ; systemctl disable postgresql"
  SCRIPT
 
-<<<<<<< HEAD
-
-=======
->>>>>>> dev
     config.vm.define "pg1" do |pg1|
       pg1.vm.network "private_network", ip: "10.0.1.10"
       pg1.vm.hostname = "pg1"
@@ -63,11 +59,6 @@ Vagrant.configure("2") do |config|
   config.vm.define "tb" do |tb|
     tb.vm.network "private_network", ip: "10.0.1.30"
     tb.vm.hostname = "tb"
-<<<<<<< HEAD
-
-
-=======
->>>>>>> dev
   end
 
 end
